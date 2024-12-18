@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	 _ "github.com/lib/pq"
 	"github.com/akicool/user-saver-service/internal"
 )
 
@@ -48,10 +49,6 @@ func main() {
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "user saver")
-	})
-
-	http.HandleFunc("/user-create", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "user service")
 	})
 
 	http.HandleFunc("/user-create", internal.HandleUserCreate)
