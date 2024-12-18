@@ -53,6 +53,9 @@ func main() {
 
 	http.HandleFunc("/user-create", internal.HandleUserCreate)
 
+	if err := http.ListenAndServe(":8080", nil); err != nil {
+		log.Fatal("Ошибка при запуске сервера:", err)
+	}
+	
 	fmt.Println("ListenAndServe localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
 }
