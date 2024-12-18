@@ -8,11 +8,10 @@ import (
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/akicool/user-saver-service/internal"
 )
 
-var db *sql.DB
-
-func initDB() {
+func initDB() *sql.DB {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Ошибка загрузки .env файла")
@@ -38,12 +37,14 @@ func initDB() {
 		log.Fatal("База данных недоступна:", err)
 	}
 	fmt.Println("Успешное подключение к базе данных")
+	return db
 }
 
 func main() {
-	initDB()
-
+	db := initDB()
 	defer db.Close()
+
+	internal.DB = db
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "user saver")
@@ -52,7 +53,8 @@ func main() {
 	http.HandleFunc("/user-create", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "user service")
 	})
-	// http.HandleFunc("/user-create", HandleUserCreate)
+
+	http.HandleFunc("/user-create", internal.HandleUserCreate)
 
 	fmt.Println("ListenAndServe localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

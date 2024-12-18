@@ -21,7 +21,7 @@ func CreateUser(user User) error {
 	return err
 }
 
-func HandleUserCreate(w http.ResponseWriter, r http.Request) {
+func HandleUserCreate(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Только метод POST поддерживается", http.StatusMethodNotAllowed)
 		return
