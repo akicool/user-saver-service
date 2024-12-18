@@ -33,7 +33,7 @@ func initDB() {
 	if err != nil {
 		log.Fatal("Ошибка подключения к базе данных:", err)
 	}
-	
+
 	if err := db.Ping(); err != nil {
 		log.Fatal("База данных недоступна:", err)
 	}
@@ -52,6 +52,7 @@ func main() {
 	http.HandleFunc("/user-create", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, "user service")
 	})
+	// http.HandleFunc("/user-create", HandleUserCreate)
 
 	fmt.Println("ListenAndServe localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
