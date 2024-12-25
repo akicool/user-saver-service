@@ -1,16 +1,48 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
-	"net/http"
+	"net"
 	"os"
 
+	pb "github.com/akicool/user-saver-service/internal/proto/user"
+	"github.com/akicool/user-saver-service/internal/user"
 	"github.com/joho/godotenv"
-	 _ "github.com/lib/pq"
-	"github.com/akicool/user-saver-service/internal"
+	_ "github.com/lib/pq"
+	"google.golang.org/grpc"
 )
+
+type server struct {
+	pb.UnimplementedUserServiceServer
+	db *sql.DB
+}
+
+func (s *server) CreateUser(ctx context.Context, req *pb.CreateUserRequest) (*pb.CreateUserResponse, error) {
+	if (req.Name == "") || (req.Email == "") || (req.Password == "") {
+		return &pb.CreateUserResponse{
+			Message: "Все поля (name, email, password) обязательны",
+			Status:  400,
+		}, nil
+	}
+
+	query := "INSERT INTO users (name, email, password) VALUES ($1, $2, $3)"
+	_, err := s.db.Exec(query, req.Name, req.Email, req.Password)
+	if err != nil {
+		log.Println("Ошибка сохранения в БД:", err)
+		return &pb.CreateUserResponse{
+			Message: "Ошибка сохранения пользователя",
+			Status:  500,
+		}, err
+	}
+
+	return &pb.CreateUserResponse{
+		Message: fmt.Sprintf("Пользователь %s успешно создан", req.Name),
+		Status:  201,
+	}, nil
+}
 
 func initDB() *sql.DB {
 	err := godotenv.Load()
@@ -47,15 +79,16 @@ func main() {
 
 	internal.DB = db
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "user saver")
-	})
-
-	http.HandleFunc("/user-create", internal.HandleUserCreate)
-
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatal("Ошибка при запуске сервера:", err)
+	lis, err := net.Listen("tcp", ":50051")
+	if err != nil {
+		log.Fatalf("Не удалось запустить сервер: %v", err)
 	}
-	
-	fmt.Println("ListenAndServe localhost:8080")
+
+	s := grpc.NewServer()
+	pb.RegisterUserServiceServer(s, &server{db: db})
+
+	fmt.Println("gRPC сервер запущен на порту 50051")
+	if err := s.Serve(lis); err != nil {
+		log.Fatalf("Ошибка запуска gRPC сервера: %v", err)
+	}
 }

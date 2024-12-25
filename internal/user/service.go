@@ -9,7 +9,9 @@ import (
 )
 
 type User struct {
-	Name, Email, Password string
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 var user User
